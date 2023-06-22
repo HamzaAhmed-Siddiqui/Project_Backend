@@ -1,5 +1,6 @@
 const bodyParser = require("body-parser");
 const connection = require("./Database");
+const bcrypt = require('bcryptjs');
 
 const express = require("express");
 
@@ -13,130 +14,171 @@ app.use(
 
 app.get("/", (req, res) => {
     res.json({ message: "ok" });
-
 });
 
 app.use(bodyParser.json());
 
-// app.get("/login", (req, res) => {
-//     connection.query(
-//       "SELECT * FROM users " +
-//       "UNION " +
-//       "SELECT * FROM teachers",
-//       (err, rows) => {
-//         if (err) {
-//           console.log(err); // Log the error details
-//           res.status(500).send("Internal Server Error");
-//         } else {
-//           res.send(rows);
-//         }
-//       }
-//     );
-//   });
 
-//   app.get('/students', (req, res) => {
-//     res.json(students);
-//   });
-//   app.post('/login', (req, res) => {
-//     const { email, password } = req.body;
-//     const student = students.find(
-//       student => student.email === email && student.password === password
-//     );
-//     if (student) {
-//       res.json({ message: 'Login successful' });
-//     } else {
-//       res.status(401).json({ message: 'Invalid credentials' });
-//     }
-//   });
 
-app.post("/login", (req, res) => {
-    const { email, password } = req.body;
-    connection.query(
-         "SELECT * FROM student" +
-         "UNION " +
-        "SELECT * FROM teachers",
-        (err, rows) => {
-            if (err) {
-                console.log(err); // Log the error details
-                res.status(500).send("Internal Server Error");
-            } else {
-                const student = rows.find(
-                    (row) => row.email === email && row.password === password
-                );
-                if (student) {
-                    res.json({ message: "Login successful" });
+app.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        connection.query(
+            "SELECT email, password FROM student " +
+            "UNION " +
+            "SELECT email, password FROM teachers",
+            (err, rows) => {
+                if (err) {
+                    console.log(err); // Log the error details
+                    res.status(500).send("Internal Server Error");
                 } else {
-                    res.status(401).json({ message: "Invalid credentials" });
+                    const student = rows.find(
+                        (row) => row.email === email && row.password === password
+                    );
+                    if (student) {
+                        res.json({ message: "Login successful" });
+                    } else {
+                        res.status(401).json({ message: "Invalid credentials" });
+                    }
                 }
             }
-        }
-    );
+        );
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
 });
 
-app.get("/teacher", (req, res) => {
-    connection.query("SELECT * FROM teachers", (err, rows) => {
-        if (err) {
-            console.log(err);
-        } else {
-            //console.log(rows)
-            res.send(rows);
-        }
-    });
-});
 
-app.get("/teacher/:id", (req, res) => {
-    connection.query(
-        "SELECT * FROM teachers WHERE teacher_id=?",
-        [req.params.id],
-        (err, rows) => {
+//ALL TEACHER
+app.get("/teacher", async (req, res) => {
+    try {
+        connection.query("SELECT * FROM teachers", (err, rows) => {
             if (err) {
                 console.log(err);
             } else {
-                //console.log(rows)
                 res.send(rows);
             }
-        }
-    );
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
 });
 
-app.delete("/teacher/:id", (req, res) => {
-    connection.query(
-        "DELETE FROM teachers WHERE teacher_id=?",
-        [req.params.id],
-        (err, rows) => {
+//ALL STUDENT
+app.get("/student", async (req, res) => {
+    try {
+        connection.query("SELECT * FROM student", (err, rows) => {
             if (err) {
                 console.log(err);
             } else {
-                //console.log(rows)
-                res.send(rows);
+                res.status(200).send(rows);
             }
-        }
-    );
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
 });
 
-app.delete("/teacher/:id", (req, res) => {
-    connection.query(
-        "DELETE FROM teachers WHERE teacher_id=?",
-        [req.params.id],
-        (err, rows) => {
-            if (err) {
-                console.log(err);
-            } else {
-                //console.log(rows)
-                res.send(rows);
-                console.log("Success");
+//SINGLE TEACHER 
+app.get("/teacher/:id", async (req, res) => {
+    try {
+        connection.query(
+            "SELECT * FROM teachers WHERE teacher_id=?",
+            [req.params.id],
+            (err, rows) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    res.send(rows);
+                }
             }
-        }
-    );
+        );
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
+});
+
+//SINGLE STUDENT
+app.get("/student/:id", async (req, res) => {
+    try {
+        connection.query(
+            "SELECT * FROM student WHERE id=?",
+            [req.params.id],
+            (err, rows) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    //console.log(rows)
+                    res.send(rows);
+                }
+            }
+        );
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
 });
 
 
-//name class email password
+//DELETE A SPECIFIC TEACHER
+app.delete("/teacher/:id", async (req, res) => {
+    try {
+        connection.query(
+            "DELETE FROM teachers WHERE teacher_id=?",
+            [req.params.id],
+            (err, rows) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    //console.log(rows)
+                    res.send(rows);
+                    console.log("Success");
+                }
+            }
+        );
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
+});
+
+//DELETE SPECIFIC STUDENT
+app.delete("/student/:id", async (req, res) => {
+    try {
+        connection.query(
+            "DELETE FROM student WHERE id=?",
+            [req.params.id],
+            (err, rows) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    //console.log(rows)
+                    res.send(rows);
+                    console.log("Success");
+                }
+            }
+        );
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
+    }
+});
+
+
 //TEACHER SIGNUP API
 app.post("/teacherSignup", async (req, res) => {
     try {
         const emp = req.body;
         const empData = [emp.name, emp.class, emp.email, emp.password];
+       // const password = await bcrypt.hash(password,5)
 
         // Check if the name already exists in the database
         connection.query(
@@ -163,8 +205,8 @@ app.post("/teacherSignup", async (req, res) => {
                             console.log(err);
                             return res.status(500).send({ message: "Something went wrong" });
                         }
-
-                        res.send(result);
+                        //res.send(result);
+                        res.status(200).json("All GOOD..!!")
                     }
                 );
             }

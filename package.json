@@ -1,0 +1,24 @@
+{
+  "name": "project_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "picomatch": "^2.3.1",
+    "simple-update-notifier": "^1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HamzaAhmed-Siddiqui/Project_Backend.git"
+  },
+  "author": "Arsalan Nawaz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HamzaAhmed-Siddiqui/Project_Backend/issues"
+  },
+  "homepage": "https://github.com/HamzaAhmed-Siddiqui/Project_Backend#readme"
+}

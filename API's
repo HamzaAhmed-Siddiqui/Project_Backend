@@ -1,0 +1,49 @@
+//Teacher Delete API
+
+// app.delete("/teacher/:id", (req, res) => {
+//     connection.query(
+//         "DELETE FROM teachers WHERE teacher_id=?",
+//         [req.params.id],
+//         (err, rows) => {
+//             if (err) {
+//                 console.log(err);
+//             } else {
+//                 //console.log(rows)
+//                 res.send(rows);
+//             }
+//         }
+//     );
+// });
+
+
+
+// app.get("/login", (req, res) => {
+//     connection.query(
+//       "SELECT * FROM users " +
+//       "UNION " +
+//       "SELECT * FROM teachers",
+//       (err, rows) => {
+//         if (err) {
+//           console.log(err); // Log the error details
+//           res.status(500).send("Internal Server Error");
+//         } else {
+//           res.send(rows);
+//         }
+//       }
+//     );
+//   });
+
+//   app.get('/students', (req, res) => {
+//     res.json(students);
+//   });
+//   app.post('/login', (req, res) => {
+//     const { email, password } = req.body;
+//     const student = students.find(
+//       student => student.email === email && student.password === password
+//     );
+//     if (student) {
+//       res.json({ message: 'Login successful' });
+//     } else {
+//       res.status(401).json({ message: 'Invalid credentials' });
+//     }
+//   });

@@ -1,20 +1,38 @@
-const bodyParser = require("body-parser");
 const connection = require("./Database");
 const bcrypt = require('bcryptjs');
 const teacherRoutes = require('./teacher-routes');
 
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
 
 const express = require("express");
 
 
 var app = express();
+
 const cors = require("cors");
-app.use(
-    cors({
-        origin: "http://localhost:5173",
-    })
+app.use(cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST"],
+    credentials: true
+})
 );
 
+app.use(cookieParser())
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
+app.use(session({
+    key: "userId",
+    secret: "subscribe",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 60 * 60 * 24,
+    }
+}
+))
 
 app.get("/", (req, res) => {
     res.json({ message: "ok" });
@@ -23,26 +41,27 @@ app.get("/", (req, res) => {
 
 app.use(bodyParser.json());
 
+//LOGIN
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         connection.query(
-            "SELECT id,studentname,email, password FROM student " +
+            "SELECT email, password FROM student " +
             "UNION " +
-            "SELECT teacher_id,teachername,email, password FROM teachers",
+            "SELECT email, password FROM teachers",
             (err, rows) => {
                 if (err) {
                     console.log(err); // Log the error details
                     res.status(500).send("Internal Server Error");
                 } else {
-                    const student = rows.find(
+                    const loginuser = rows.find(
                         (row) => row.email === email && row.password === password
                     );
-                    if (student) {
-                        console.log(student)
-                        res.json({status:true, message: "Login successful" ,data:student});
+                    if (loginuser) {
+                        //console.log(student)
+                        res.json({ status: true, message: "Login successful", data: loginuser });
                     } else {
-                        res.status(401).json({ status:false,message: "Invalid credentials" });
+                        res.status(401).json({ status: false, message: "Invalid credentials" });
                     }
                 }
             }
@@ -133,30 +152,30 @@ app.get("/student/:id", async (req, res) => {
         return res.status(500).send({ message: "Something went wrong" });
     }
 });
-
+//update student
 app.patch("/student", async (req, res) => {
     try {
-      const emp = req.body;
-      connection.query(
-        "UPDATE student SET ? WHERE id=" + emp.id,
-        [emp],
-        (err, rows) => {
-          if (err) {
-            console.log(err);
-          } else {
-            //console.log(rows)
-            res.json({status:true, message: "updated succesfully" ,data:rows});
+        const emp = req.body;
+        connection.query(
+            "UPDATE student SET ? WHERE id=" + emp.id,
+            [emp],
+            (err, rows) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    //console.log(rows)
+                    res.json({ status: true, message: "updated succesfully", data: rows });
 
-            //res.send(rows);
-          }
-        }
-      );
+                    //res.send(rows);
+                }
+            }
+        );
     } catch (error) {
-      console.log(error);
-      return res.status(500).send({ message: "Something went wrong" });
+        console.log(error);
+        return res.status(500).send({ message: "Something went wrong" });
     }
-  
-  });
+
+});
 
 //SINGLE STUDENT
 app.get("/student/:id", async (req, res) => {
@@ -299,8 +318,8 @@ app.post("/teacherSignup", async (req, res) => {
                             console.log(err);
                             return res.status(500).send({ message: "Something went wrong" });
                         }
-                       // res.send(result);
-                         res.status(200).json("All GOOD..!!")
+                        // res.send(result);
+                        res.status(200).json("All GOOD..!!")
                     }
                 );
             }
@@ -318,12 +337,12 @@ app.post("/teacherSignup", async (req, res) => {
 app.post("/studentSignup", async (req, res) => {
     try {
         const emp = req.body;
-        const empData = [emp.name, emp.class, emp.email, emp.password];
+        const empData = [emp.name, emp.email, emp.password];
 
 
         // Check if the name already exists in the database
         connection.query(
-            "SELECT * FROM student WHERE studentname = ?",
+            "SELECT * FROM student WHERE name = ?",
             [emp.name],
             (err, rows) => {
                 if (err) {
@@ -341,7 +360,7 @@ app.post("/studentSignup", async (req, res) => {
 
                 // Insert the new record
                 connection.query(
-                    "INSERT INTO student(studentname, studentclass, email, password ) VALUES(?)",
+                    "INSERT INTO student(name, email, password ) VALUES(?)",
                     [empData],
                     (err, result) => {
                         if (err) {
